@@ -67,11 +67,16 @@ def get_total_pengeluaran(pengeluaran):
     return sum(p.get('nominal', 0) for p in pengeluaran)
 
 def get_target_total(config, members, donatur):
-    pemuda_aktif = sum(1 for m in members if m['kategori'] == 'Pemuda' and m.get('status', 'AKTIF') == 'AKTIF')
-    orangtua_aktif = sum(1 for m in members if m['kategori'] == 'Orang Tua' and m.get('status', 'AKTIF') == 'AKTIF')
-    total_donatur = sum(d.get('nominal', 0) for d in donatur)
-    return (pemuda_aktif * config.get('target_pemuda', 1750000)) + \
-           (orangtua_aktif * config.get('target_orangtua', 1000000)) + total_donatur
+    donatur1 = sum(1 for m in members if m['kategori'] == 'Donatur 1' and m.get('status', 'AKTIF') == 'AKTIF')
+    donatur2 = sum(1 for m in members if m['kategori'] == 'Donatur 2' and m.get('status', 'AKTIF') == 'AKTIF')
+    pemuda = sum(1 for m in members if m['kategori'] == 'Pemuda' and m.get('status', 'AKTIF') == 'AKTIF')
+    orangtua = sum(1 for m in members if m['kategori'] == 'Orang Tua' and m.get('status', 'AKTIF') == 'AKTIF')
+    
+    target = (donatur1 * config.get('target_donatur1', 5000000)) + \
+             (donatur2 * config.get('target_donatur2', 2500000)) + \
+             (pemuda * config.get('target_pemuda', 1500000)) + \
+             (orangtua * config.get('target_orangtua', 1000000))
+    return target
 
 def get_rekomendasi(members, transactions):
     today = datetime.now().strftime("%Y-%m-%d")
@@ -137,7 +142,7 @@ def buat_grafik_pemasukan_per_bulan(transactions):
         textposition='outside'
     )])
     fig.update_layout(
-        title="📈 Pemasukan per Bulan",
+        title="Pemasukan per Bulan",
         xaxis_title="Bulan",
         yaxis_title="Total (Rp)",
         height=400,
@@ -182,7 +187,7 @@ def buat_grafik_pemasukan_per_minggu(transactions, config):
         textposition='outside'
     )])
     fig.update_layout(
-        title="📈 Pemasukan per Minggu",
+        title="Pemasukan per Minggu",
         xaxis_title="Minggu Ke-",
         yaxis_title="Total (Rp)",
         height=400,
@@ -215,7 +220,7 @@ def buat_grafik_pengeluaran(pengeluaran):
         marker=dict(colors=colors[:len(kategori_data)])
     )])
     fig.update_layout(
-        title="🥧 Pengeluaran per Kategori",
+        title="Pengeluaran per Kategori",
         height=400
     )
     return fig
@@ -231,7 +236,7 @@ def buat_grafik_perbandingan(transactions, pengeluaran, donatur):
         go.Bar(name='Saldo', x=['Total'], y=[saldo if saldo > 0 else 0], marker_color='#FFA94D')
     ])
     fig.update_layout(
-        title="📊 Perbandingan Pemasukan vs Pengeluaran",
+        title="Perbandingan Pemasukan vs Pengeluaran",
         yaxis_title="Nominal (Rp)",
         height=400,
         barmode='group'
@@ -271,8 +276,10 @@ def buat_grafik_progress(target, total_pemasukan):
 config = load_json(CONFIG_FILE, {})
 if not config:
     config = {
-        "tanggal_mulai": "2026-09-04",
-        "target_pemuda": 1750000,
+        "tanggal_mulai": "2026-09-11",
+        "target_donatur1": 5000000,
+        "target_donatur2": 2500000,
+        "target_pemuda": 1500000,
         "target_orangtua": 1000000
     }
     save_json(CONFIG_FILE, config)
@@ -280,78 +287,223 @@ if not config:
 members = load_json(MEMBER_FILE, [])
 if not members:
     members = [
-        {"id": 1, "nama": "Budi Santoso", "kategori": "Pemuda", "status": "AKTIF", "tanggal_masuk": "2026-09-04"},
-        {"id": 2, "nama": "Andi Pratama", "kategori": "Pemuda", "status": "AKTIF", "tanggal_masuk": "2026-09-04"},
-        {"id": 3, "nama": "Caca Ananda", "kategori": "Anak-anak", "status": "AKTIF", "tanggal_masuk": "2026-09-04"},
-        {"id": 4, "nama": "Ibu Siti", "kategori": "Perempuan", "status": "AKTIF", "tanggal_masuk": "2026-09-04"},
-        {"id": 5, "nama": "Pak Ahmad", "kategori": "Orang Tua", "status": "AKTIF", "tanggal_masuk": "2026-09-04"},
+        {"id": 1, "nama": "Juned", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 2, "nama": "Anto", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 3, "nama": "Heri", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 4, "nama": "Harjo", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 5, "nama": "Kempeng", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 6, "nama": "Sholeh", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 7, "nama": "Junaidy tb (titis)", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 8, "nama": "Muslimin (edwin)", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 9, "nama": "Yanto", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 10, "nama": "Asrofi", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 11, "nama": "Akrom", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 12, "nama": "Apip (dewa puyuh)", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 13, "nama": "Viori salon (khoiri)", "kategori": "Donatur 1", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 14, "nama": "Bowok", "kategori": "Donatur 2", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 15, "nama": "Aji", "kategori": "Donatur 2", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 16, "nama": "Borod", "kategori": "Donatur 2", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 17, "nama": "Kholis", "kategori": "Donatur 2", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 18, "nama": "Apip ar", "kategori": "Donatur 2", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
+        {"id": 19, "nama": "Akim", "kategori": "Donatur 2", "status": "AKTIF", "tanggal_masuk": "2026-09-11"},
     ]
+    pemuda_list = ["Didik", "Wanto", "Deny", "Ikam", "Inu", "Eko", "Dimas", "Riki", "Deny gobel", "Belod", 
+                   "Kevin", "Umar", "Umam", "Cais", "Eko tuwek", "Mukri", "Wawan", "Mhad", "Fikri", "Feri",
+                   "Ulum", "Apot", "Faza", "Slamet", "Azam", "Hermawan", "Santo", "Hesa", "Ipan", "Fais",
+                   "Fakhur", "Riki pabrek", "Reza", "Deny j", "Ari the", "Roni", "Zamas", "Alvin", "Rt ne", "Febri",
+                   "Ozi", "Sandi", "Agung", "Pendi", "Darno", "Kipli", "Bapi", "Rozak", "Biin", "Ipul",
+                   "Ikhlas", "Imin woyo", "Batok", "Hasem", "Ipan (rid)", "Galang", "Danil", "Ayes", "Slamet (ibrohim)", "Riskon",
+                   "Amet", "Botok", "Zaenal", "Ozi gendut", "Warji", "Putra", "Ciko (jikin)", "Furqon", "Faiq", "Hedi (tasbut)",
+                   "Syukron (kepoanakan panjul)", "Dalas", "Apip (ngontrak gon kj lihin)"]
+    for i, nama in enumerate(pemuda_list, start=20):
+        members.append({"id": i, "nama": nama, "kategori": "Pemuda", "status": "AKTIF", "tanggal_masuk": "2026-09-11"})
+    
+    orangtua_list = ["Gendowor", "Ndhon", "Didik", "Ajed", "Carmudi", "Bisri", "Kholidin (yati)", "Iwan", "Libid", "Syukron",
+                     "De parto", "Kondor", "Kholidin bos", "Lutfi", "Budi", "Edi", "Baset", "Panjol", "Mundhor", "Jembar",
+                     "Casyadi (jembar)", "Anto ratna", "Den bogol", "Irak", "Lupi", "Agus", "Izal fakhur", "Slamet T", "Kholidin ayam", "Pedro",
+                     "Slamet (waidah)", "Dirun", "Jono", "Wagio", "Wahidun", "Si'in", "Sipur", "Arik vita"]
+    next_id = len(members) + 1
+    for nama in orangtua_list:
+        members.append({"id": next_id, "nama": nama, "kategori": "Orang Tua", "status": "AKTIF", "tanggal_masuk": "2026-09-11"})
+        next_id += 1
+    
     save_json(MEMBER_FILE, members)
 
 transactions = load_json(TRANSACTION_FILE, [])
 pengeluaran = load_json(PENGELUARAN_FILE, [])
 donatur = load_json(DONATUR_FILE, [])
-if not donatur:
-    donatur = [
-        {"id": 1, "nama": "Rzky", "kategori": "Donatur 1", "nominal": 5000000, "status": "SUDAH BAYAR", "tanggal_bayar": "2026-09-04"},
-        {"id": 2, "nama": "Bowok", "kategori": "Donatur 2", "nominal": 2500000, "status": "BELUM BAYAR", "tanggal_bayar": None}
-    ]
-    save_json(DONATUR_FILE, donatur)
 
 # ==================================================
 # 4. STREAMLIT UI
 # ==================================================
 
-st.set_page_config(page_title="Sistem Iuran", page_icon="💰", layout="wide")
+st.set_page_config(page_title="Sistem Iuran", page_icon="💰", layout="wide", initial_sidebar_state="expanded")
 
-# Sidebar
-st.sidebar.title("💰 SISTEM IURAN")
-st.sidebar.markdown("---")
+# Inject Font Awesome CSS
+st.markdown("""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Font lebih besar */
+        .stMetricValue {
+            font-size: 28px !important;
+            color: #1a365d !important;
+        }
+        .stMetricLabel {
+            font-size: 16px !important;
+            color: #4a5568 !important;
+        }
+        /* Card dengan bayangan */
+        .css-1r6slb0 {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 20px;
+        }
+        /* Sidebar icon */
+        .sidebar-icon {
+            width: 28px;
+            text-align: center;
+            margin-right: 12px;
+            color: #1a365d;
+        }
+        .sidebar-menu {
+            font-size: 18px;
+            padding: 8px 0;
+        }
+        /* Header */
+        .main-header {
+            color: #1a365d;
+            font-weight: 700;
+            font-size: 28px;
+        }
+        .sub-header {
+            color: #4a5568;
+            font-size: 16px;
+        }
+        /* Tombol */
+        .stButton button {
+            background-color: #1a365d !important;
+            color: white !important;
+            font-size: 18px !important;
+            padding: 12px 24px !important;
+            border-radius: 8px !important;
+            border: none !important;
+        }
+        .stButton button:hover {
+            background-color: #2d4a7a !important;
+        }
+        /* Tabel */
+        .dataframe {
+            font-size: 16px !important;
+        }
+        .dataframe th {
+            background-color: #1a365d !important;
+            color: white !important;
+            padding: 12px !important;
+        }
+        .dataframe td {
+            padding: 10px !important;
+        }
+        /* Radio button */
+        .stRadio > label {
+            font-size: 16px !important;
+        }
+        .stRadio > div {
+            gap: 16px !important;
+        }
+        /* Selectbox */
+        .stSelectbox > label {
+            font-size: 16px !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# ==================================================
+# 5. SIDEBAR MENU
+# ==================================================
+
+st.sidebar.markdown("""
+    <div style='text-align: center; margin-bottom: 20px;'>
+        <i class="fas fa-coins" style='font-size: 32px; color: #1a365d;'></i>
+        <h2 style='color: #1a365d; margin: 0;'>SISTEM IURAN</h2>
+        <hr style='border: 1px solid #e2e8f0;'>
+    </div>
+""", unsafe_allow_html=True)
 
 menu = st.sidebar.radio(
-    "📋 Menu",
-    ["📊 Dashboard", 
-     "👥 Data Member", 
-     "💰 Input Pembayaran", 
-     "✏️ Edit Pembayaran",
-     "💸 Input Pengeluaran",
-     "✏️ Edit Pengeluaran",
-     "💰 Manajemen Donatur",
-     "📈 Grafik & Analisis",
-     "🔔 Rekomendasi",
-     "📄 Laporan",
-     "⚙️ Setting"]
+    "",
+    [
+        "Dashboard",
+        "Manajemen Member",
+        "Input Pembayaran",
+        "Edit Pembayaran",
+        "Input Pengeluaran",
+        "Edit Pengeluaran",
+        "Manajemen Donatur",
+        "Grafik & Analisis",
+        "Rekomendasi",
+        "Laporan & Rekap",
+        "Setting"
+    ],
+    format_func=lambda x: f"<i class='fas fa-{get_icon(x)} sidebar-icon'></i> {x}",
+    label_visibility="collapsed"
 )
 
+def get_icon(menu_name):
+    icons = {
+        "Dashboard": "chart-pie",
+        "Manajemen Member": "users",
+        "Input Pembayaran": "hand-holding-usd",
+        "Edit Pembayaran": "pen",
+        "Input Pengeluaran": "money-bill-wave",
+        "Edit Pengeluaran": "edit",
+        "Manajemen Donatur": "hand-holding-heart",
+        "Grafik & Analisis": "chart-line",
+        "Rekomendasi": "bell",
+        "Laporan & Rekap": "file-alt",
+        "Setting": "cog"
+    }
+    return icons.get(menu_name, "circle")
+
 st.sidebar.markdown("---")
+
 total_pemasukan = get_total_pemasukan(transactions, donatur)
 total_pengeluaran = get_total_pengeluaran(pengeluaran)
 saldo = total_pemasukan - total_pengeluaran
-st.sidebar.caption(f"💰 Total Pemasukan: {format_rupiah(total_pemasukan)}")
-st.sidebar.caption(f"💸 Total Pengeluaran: {format_rupiah(total_pengeluaran)}")
-st.sidebar.caption(f"💵 Saldo: {format_rupiah(saldo)}")
-st.sidebar.caption(f"👥 Total Member: {len(members)}")
+
+st.sidebar.markdown(f"""
+    <div style='background: #f7fafc; padding: 16px; border-radius: 8px;'>
+        <div style='color: #4a5568; font-size: 14px;'>Total Pemasukan</div>
+        <div style='color: #1a365d; font-size: 20px; font-weight: 700;'>{format_rupiah(total_pemasukan)}</div>
+        <div style='color: #4a5568; font-size: 14px; margin-top: 8px;'>Total Pengeluaran</div>
+        <div style='color: #1a365d; font-size: 20px; font-weight: 700;'>{format_rupiah(total_pengeluaran)}</div>
+        <div style='color: #4a5568; font-size: 14px; margin-top: 8px;'>Saldo</div>
+        <div style='color: #1a365d; font-size: 20px; font-weight: 700;'>{format_rupiah(saldo)}</div>
+        <div style='color: #4a5568; font-size: 14px; margin-top: 8px;'>Total Member</div>
+        <div style='color: #1a365d; font-size: 20px; font-weight: 700;'>{len(members)}</div>
+    </div>
+""", unsafe_allow_html=True)
 
 # ==================================================
-# 5. HALAMAN DASHBOARD
+# 6. HALAMAN DASHBOARD
 # ==================================================
 
-if menu == "📊 Dashboard":
-    st.title("📊 Dashboard Keuangan")
-    st.caption(f"📅 Periode: {config['tanggal_mulai']} - Agustus 2027")
+if menu == "Dashboard":
+    st.markdown("<h1 class='main-header'>Dashboard Keuangan</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p class='sub-header'>Periode: {config['tanggal_mulai']} - Agustus 2027</p>", unsafe_allow_html=True)
     
     target = get_target_total(config, members, donatur)
     progress = (total_pemasukan / target * 100) if target > 0 else 0
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("💰 Total Pemasukan", format_rupiah(total_pemasukan))
+        st.metric("Total Pemasukan", format_rupiah(total_pemasukan))
     with col2:
-        st.metric("💸 Total Pengeluaran", format_rupiah(total_pengeluaran))
+        st.metric("Total Pengeluaran", format_rupiah(total_pengeluaran))
     with col3:
-        st.metric("💵 Saldo Bersih", format_rupiah(saldo))
+        st.metric("Saldo Bersih", format_rupiah(saldo))
     with col4:
-        st.metric("🎯 Progress Target", f"{progress:.1f}%")
+        st.metric("Progress Target", f"{progress:.1f}%")
     
     st.markdown("---")
     
@@ -365,21 +517,53 @@ if menu == "📊 Dashboard":
     st.plotly_chart(buat_grafik_pemasukan_per_bulan(transactions), use_container_width=True)
 
 # ==================================================
-# 6. HALAMAN DATA MEMBER
+# 7. HALAMAN MANAJEMEN MEMBER
 # ==================================================
 
-elif menu == "👥 Data Member":
-    st.title("👥 Manajemen Member")
+elif menu == "Manajemen Member":
+    st.markdown("<h1 class='main-header'>Manajemen Member</h1>", unsafe_allow_html=True)
     
-    # Tambah Member
-    with st.expander("➕ Tambah Member Baru"):
+    filter_kategori = st.radio(
+        "Pilih Kategori",
+        ["Donatur", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak", "Semua Member"],
+        horizontal=True
+    )
+    
+    sub_filter = "Semua"
+    if filter_kategori == "Donatur":
+        sub_filter = st.radio(
+            "Pilih Donatur",
+            ["Donatur 1", "Donatur 2", "Lihat Semua Donatur"],
+            horizontal=True
+        )
+    
+    filtered_members = []
+    if filter_kategori == "Donatur":
+        if sub_filter == "Donatur 1":
+            filtered_members = [m for m in members if m['kategori'] == 'Donatur 1']
+        elif sub_filter == "Donatur 2":
+            filtered_members = [m for m in members if m['kategori'] == 'Donatur 2']
+        else:
+            filtered_members = [m for m in members if m['kategori'] in ['Donatur 1', 'Donatur 2']]
+    elif filter_kategori == "Pemuda":
+        filtered_members = [m for m in members if m['kategori'] == 'Pemuda']
+    elif filter_kategori == "Orang Tua":
+        filtered_members = [m for m in members if m['kategori'] == 'Orang Tua']
+    elif filter_kategori == "Perempuan":
+        filtered_members = [m for m in members if m['kategori'] == 'Perempuan']
+    elif filter_kategori == "Anak-anak":
+        filtered_members = [m for m in members if m['kategori'] == 'Anak-anak']
+    else:
+        filtered_members = members
+    
+    with st.expander("Tambah Member"):
         col1, col2 = st.columns(2)
         with col1:
             nama_baru = st.text_input("Nama")
         with col2:
-            kategori_baru = st.selectbox("Kategori", ["Pemuda", "Orang Tua", "Anak-anak", "Perempuan"])
+            kategori_baru = st.selectbox("Kategori", ["Donatur 1", "Donatur 2", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak"])
         
-        if st.button("➕ Tambah Member", use_container_width=True):
+        if st.button("Tambah Member", use_container_width=True):
             if nama_baru:
                 new_id = max([m['id'] for m in members]) + 1 if members else 1
                 members.append({
@@ -395,89 +579,47 @@ elif menu == "👥 Data Member":
             else:
                 st.error("❌ Nama harus diisi!")
     
-    # Edit Member
-    with st.expander("✏️ Edit Member"):
-        if members:
-            member_options = {f"{m['nama']} ({m['kategori']})": m['id'] for m in members}
-            selected = st.selectbox("Pilih Member", list(member_options.keys()))
-            member_id = member_options[selected]
-            member = next(m for m in members if m['id'] == member_id)
-            
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                nama_baru = st.text_input("Nama Baru", value=member['nama'])
-            with col2:
-                kategori_baru = st.selectbox("Kategori Baru", ["Pemuda", "Orang Tua", "Anak-anak", "Perempuan"], 
-                                           index=["Pemuda", "Orang Tua", "Anak-anak", "Perempuan"].index(member['kategori']))
-            with col3:
-                status_baru = st.selectbox("Status Baru", ["AKTIF", "NONAKTIF"], 
-                                          index=["AKTIF", "NONAKTIF"].index(member.get('status', 'AKTIF')))
-            
-            if st.button("💾 Simpan Perubahan", use_container_width=True):
-                member['nama'] = nama_baru
-                member['kategori'] = kategori_baru
-                member['status'] = status_baru
-                save_json(MEMBER_FILE, members)
-                st.success("✅ Member berhasil diupdate!")
-                st.rerun()
-        else:
-            st.info("Belum ada member.")
+    search = st.text_input("Cari Member", placeholder="Ketik nama...")
+    if search:
+        filtered_members = [m for m in filtered_members if search.lower() in m['nama'].lower()]
     
-    # Hapus Member
-    with st.expander("🗑️ Hapus Member"):
-        if members:
-            member_options = {f"{m['nama']} ({m['kategori']})": m['id'] for m in members}
-            selected = st.selectbox("Pilih Member yang akan dihapus", list(member_options.keys()))
-            member_id = member_options[selected]
-            member = next(m for m in members if m['id'] == member_id)
-            
-            st.warning(f"⚠️ Anda akan menghapus member: **{member['nama']}**")
-            st.warning("⚠️ Semua transaksi member ini juga akan dihapus!")
-            
-            if st.button("🗑️ Hapus Permanen", use_container_width=True):
-                # Hapus transaksi member
-                transactions = [t for t in transactions if t.get('nama') != member['nama']]
-                save_json(TRANSACTION_FILE, transactions)
-                # Hapus member
-                members = [m for m in members if m['id'] != member_id]
-                save_json(MEMBER_FILE, members)
-                st.success(f"✅ Member {member['nama']} berhasil dihapus!")
-                st.rerun()
-        else:
-            st.info("Belum ada member.")
+    st.write(f"### {filter_kategori} ({len(filtered_members)} orang)")
     
-    # Daftar Member
-    st.markdown("---")
-    st.write("### 📋 Daftar Member")
-    
-    if members:
-        df = pd.DataFrame(members)
+    if filtered_members:
+        df = pd.DataFrame(filtered_members)
         df['Status'] = df['status'].apply(lambda x: f"🟢 {x}" if x == 'AKTIF' else f"🔴 {x}")
-        st.dataframe(df[['id', 'nama', 'kategori', 'Status', 'tanggal_masuk']].rename(columns={
+        
+        total_bayar = []
+        for m in filtered_members:
+            total = sum(t.get('nominal', 0) for t in transactions if t.get('nama') == m['nama'] and t.get('jenis') != 'pengeluaran')
+            total_bayar.append(format_rupiah(total))
+        df['Total Bayar'] = total_bayar
+        
+        st.dataframe(df[['id', 'nama', 'kategori', 'Status', 'Total Bayar', 'tanggal_masuk']].rename(columns={
             'id': 'ID', 'nama': 'Nama', 'kategori': 'Kategori', 'tanggal_masuk': 'Tanggal Masuk'
         }), use_container_width=True)
     else:
-        st.info("Belum ada member.")
+        st.info("Belum ada member di kategori ini.")
 
 # ==================================================
-# 7. HALAMAN INPUT PEMBAYARAN
+# 8. HALAMAN INPUT PEMBAYARAN
 # ==================================================
 
-elif menu == "💰 Input Pembayaran":
-    st.title("💰 Input Pembayaran Mingguan")
+elif menu == "Input Pembayaran":
+    st.markdown("<h1 class='main-header'>Input Pembayaran Mingguan</h1>", unsafe_allow_html=True)
     
     today = datetime.now().strftime("%Y-%m-%d")
     minggu_ke = get_minggu_ke(today, config['tanggal_mulai'])
-    start_week, end_week = get_week_range(config['tanggal_mulai'], minggu_ke)
+    start_week, end_week = get_week_range(config['tanggal_mulai'], minggu_ke) if minggu_ke > 0 else ("-", "-")
     
-    st.caption(f"📅 Minggu ke-{minggu_ke} | Periode: {start_week} - {end_week}")
+    st.markdown(f"<p class='sub-header'>Minggu ke-{minggu_ke} | Periode: {start_week} - {end_week}</p>", unsafe_allow_html=True)
     
     active_members = [m for m in members if m.get('status', 'AKTIF') == 'AKTIF']
     
     if not active_members:
         st.warning("Belum ada member aktif.")
     else:
-        st.write("### 📋 Daftar Tagihan Minggu Ini")
+        st.write("### Daftar Tagihan Minggu Ini")
         
         data_input = {}
         for m in active_members:
@@ -489,7 +631,7 @@ elif menu == "💰 Input Pembayaran":
                 key=f"pay_{m['id']}"
             )
         
-        if st.button("💾 Simpan Semua", use_container_width=True):
+        if st.button("Simpan Semua", use_container_width=True):
             saved = 0
             for member_id, nominal in data_input.items():
                 member = next(m for m in members if m['id'] == member_id)
@@ -506,9 +648,8 @@ elif menu == "💰 Input Pembayaran":
             st.success(f"✅ {saved} pembayaran berhasil disimpan!")
             st.rerun()
         
-        # Rekap
         st.markdown("---")
-        st.write("### 📊 Rekap Minggu Ini")
+        st.write("### Rekap Minggu Ini")
         trans_minggu = [t for t in transactions if t.get('minggu_ke') == minggu_ke and t.get('jenis') != 'pengeluaran']
         total_minggu = sum(t.get('nominal', 0) for t in trans_minggu)
         total_bayar = len(set(t.get('nama') for t in trans_minggu if t.get('nominal', 0) > 0))
@@ -523,16 +664,15 @@ elif menu == "💰 Input Pembayaran":
             st.metric("Belum Bayar", f"{total_belum} orang")
 
 # ==================================================
-# 8. HALAMAN EDIT PEMBAYARAN
+# 9. HALAMAN EDIT PEMBAYARAN
 # ==================================================
 
-elif menu == "✏️ Edit Pembayaran":
-    st.title("✏️ Edit Pembayaran")
+elif menu == "Edit Pembayaran":
+    st.markdown("<h1 class='main-header'>Edit Pembayaran</h1>", unsafe_allow_html=True)
     
     if not transactions:
         st.info("Belum ada transaksi.")
     else:
-        # Pilih member
         member_names = list(set(t.get('nama') for t in transactions if t.get('jenis') != 'pengeluaran'))
         if not member_names:
             st.info("Belum ada transaksi pembayaran.")
@@ -543,7 +683,6 @@ elif menu == "✏️ Edit Pembayaran":
             if not trans_member:
                 st.info(f"Member {selected_member} belum punya transaksi.")
             else:
-                # Tampilkan transaksi
                 trans_data = []
                 for i, t in enumerate(trans_member):
                     trans_data.append({
@@ -554,20 +693,19 @@ elif menu == "✏️ Edit Pembayaran":
                     })
                 st.dataframe(pd.DataFrame(trans_data), use_container_width=True)
                 
-                # Pilih transaksi yang akan diedit
                 trans_options = [f"No {i+1} - {t.get('tanggal', '-')} - {format_rupiah(t.get('nominal', 0))}" for i, t in enumerate(trans_member)]
                 selected_idx = st.selectbox("Pilih Transaksi yang akan diedit", range(len(trans_options)), format_func=lambda x: trans_options[x])
                 
                 trans = trans_member[selected_idx]
                 
-                st.write("### 📝 Edit Data")
+                st.write("### Edit Data")
                 col1, col2 = st.columns(2)
                 with col1:
                     tanggal_baru = st.date_input("Tanggal Baru", value=datetime.strptime(trans.get('tanggal', datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d"))
                 with col2:
                     nominal_baru = st.text_input("Nominal Baru (contoh: 500.000)", value=str(trans.get('nominal', 0)).replace(".", ""))
                 
-                if st.button("💾 Simpan Perubahan", use_container_width=True):
+                if st.button("Simpan Perubahan", use_container_width=True):
                     nominal = parse_nominal(nominal_baru)
                     if nominal is not None:
                         trans['tanggal'] = tanggal_baru.strftime("%Y-%m-%d")
@@ -580,11 +718,11 @@ elif menu == "✏️ Edit Pembayaran":
                         st.error("❌ Format nominal salah! Gunakan titik (contoh: 500.000)")
 
 # ==================================================
-# 9. HALAMAN INPUT PENGELUARAN
+# 10. HALAMAN INPUT PENGELUARAN
 # ==================================================
 
-elif menu == "💸 Input Pengeluaran":
-    st.title("💸 Input Pengeluaran")
+elif menu == "Input Pengeluaran":
+    st.markdown("<h1 class='main-header'>Input Pengeluaran</h1>", unsafe_allow_html=True)
     
     with st.form("form_pengeluaran"):
         col1, col2 = st.columns(2)
@@ -595,7 +733,7 @@ elif menu == "💸 Input Pengeluaran":
             tanggal = st.date_input("Tanggal", value=datetime.now().date())
             keterangan = st.text_input("Keterangan")
         
-        if st.form_submit_button("💾 Simpan Pengeluaran", use_container_width=True):
+        if st.form_submit_button("Simpan Pengeluaran", use_container_width=True):
             nominal_int = parse_nominal(nominal)
             if kategori and nominal_int and nominal_int > 0:
                 pengeluaran.append({
@@ -611,7 +749,7 @@ elif menu == "💸 Input Pengeluaran":
                 st.error("❌ Kategori dan nominal harus diisi dengan benar!")
     
     st.markdown("---")
-    st.write("### 📋 Riwayat Pengeluaran")
+    st.write("### Riwayat Pengeluaran")
     if pengeluaran:
         df = pd.DataFrame(pengeluaran)
         df['Nominal'] = df['nominal'].apply(format_rupiah)
@@ -621,22 +759,21 @@ elif menu == "💸 Input Pengeluaran":
         st.caption(f"Total Pengeluaran: {format_rupiah(sum(p['nominal'] for p in pengeluaran))}")
 
 # ==================================================
-# 10. HALAMAN EDIT PENGELUARAN
+# 11. HALAMAN EDIT PENGELUARAN
 # ==================================================
 
-elif menu == "✏️ Edit Pengeluaran":
-    st.title("✏️ Edit Pengeluaran")
+elif menu == "Edit Pengeluaran":
+    st.markdown("<h1 class='main-header'>Edit Pengeluaran</h1>", unsafe_allow_html=True)
     
     if not pengeluaran:
         st.info("Belum ada pengeluaran.")
     else:
-        # Pilih pengeluaran
         pengeluaran_options = [f"No {i+1} - {p.get('tanggal', '-')} - {p.get('kategori', '-')} - {format_rupiah(p.get('nominal', 0))}" for i, p in enumerate(pengeluaran)]
         selected_idx = st.selectbox("Pilih Pengeluaran yang akan diedit", range(len(pengeluaran_options)), format_func=lambda x: pengeluaran_options[x])
         
         p = pengeluaran[selected_idx]
         
-        st.write("### 📝 Edit Data")
+        st.write("### Edit Data")
         col1, col2 = st.columns(2)
         with col1:
             kategori_baru = st.text_input("Kategori Baru", value=p.get('kategori', ''))
@@ -645,7 +782,7 @@ elif menu == "✏️ Edit Pengeluaran":
             tanggal_baru = st.date_input("Tanggal Baru", value=datetime.strptime(p.get('tanggal', datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d"))
             keterangan_baru = st.text_input("Keterangan Baru", value=p.get('keterangan', ''))
         
-        if st.button("💾 Simpan Perubahan", use_container_width=True):
+        if st.button("Simpan Perubahan", use_container_width=True):
             nominal_int = parse_nominal(nominal_baru)
             if kategori_baru and nominal_int and nominal_int > 0:
                 p['kategori'] = kategori_baru
@@ -659,14 +796,13 @@ elif menu == "✏️ Edit Pengeluaran":
                 st.error("❌ Kategori dan nominal harus diisi dengan benar!")
 
 # ==================================================
-# 11. HALAMAN MANAJEMEN DONATUR
+# 12. HALAMAN MANAJEMEN DONATUR
 # ==================================================
 
-elif menu == "💰 Manajemen Donatur":
-    st.title("💰 Manajemen Donatur")
+elif menu == "Manajemen Donatur":
+    st.markdown("<h1 class='main-header'>Manajemen Donatur</h1>", unsafe_allow_html=True)
     
-    # Tambah Donatur
-    with st.expander("➕ Tambah Donatur"):
+    with st.expander("Tambah Donatur"):
         col1, col2 = st.columns(2)
         with col1:
             nama_donatur = st.text_input("Nama Donatur")
@@ -675,12 +811,10 @@ elif menu == "💰 Manajemen Donatur":
             kategori_donatur = st.selectbox("Kategori", ["Donatur 1", "Donatur 2"])
             status_donatur = st.selectbox("Status", ["SUDAH BAYAR", "BELUM BAYAR"])
         
-        if st.button("➕ Tambah Donatur", use_container_width=True):
+        if st.button("Tambah Donatur", use_container_width=True):
             nominal_int = parse_nominal(nominal_donatur)
             if nama_donatur and nominal_int and nominal_int > 0:
-                new_id = max([d['id'] for d in donatur]) + 1 if donatur else 1
                 donatur.append({
-                    "id": new_id,
                     "nama": nama_donatur,
                     "kategori": kategori_donatur,
                     "nominal": nominal_int,
@@ -693,61 +827,7 @@ elif menu == "💰 Manajemen Donatur":
             else:
                 st.error("❌ Nama dan nominal harus diisi dengan benar!")
     
-    # Edit Donatur
-    with st.expander("✏️ Edit Donatur"):
-        if donatur:
-            donatur_options = {f"{d['nama']} ({d.get('kategori', 'Donatur')}) - {format_rupiah(d['nominal'])}": d['id'] for d in donatur}
-            selected = st.selectbox("Pilih Donatur", list(donatur_options.keys()))
-            donatur_id = donatur_options[selected]
-            d = next(x for x in donatur if x['id'] == donatur_id)
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                nama_baru = st.text_input("Nama Baru", value=d['nama'])
-                nominal_baru = st.text_input("Nominal Baru", value=str(d['nominal']).replace(".", ""))
-            with col2:
-                kategori_baru = st.selectbox("Kategori Baru", ["Donatur 1", "Donatur 2"], 
-                                           index=["Donatur 1", "Donatur 2"].index(d.get('kategori', 'Donatur 1')))
-                status_baru = st.selectbox("Status Baru", ["SUDAH BAYAR", "BELUM BAYAR"],
-                                         index=["SUDAH BAYAR", "BELUM BAYAR"].index(d.get('status', 'BELUM BAYAR')))
-            
-            if st.button("💾 Simpan Perubahan Donatur", use_container_width=True):
-                nominal_int = parse_nominal(nominal_baru)
-                if nominal_int and nominal_int > 0:
-                    d['nama'] = nama_baru
-                    d['nominal'] = nominal_int
-                    d['kategori'] = kategori_baru
-                    d['status'] = status_baru
-                    if status_baru == "SUDAH BAYAR" and not d.get('tanggal_bayar'):
-                        d['tanggal_bayar'] = datetime.now().strftime("%Y-%m-%d")
-                    save_json(DONATUR_FILE, donatur)
-                    st.success("✅ Donatur berhasil diupdate!")
-                    st.rerun()
-                else:
-                    st.error("❌ Nominal harus diisi dengan benar!")
-        else:
-            st.info("Belum ada donatur.")
-    
-    # Hapus Donatur
-    with st.expander("🗑️ Hapus Donatur"):
-        if donatur:
-            donatur_options = {f"{d['nama']} ({d.get('kategori', 'Donatur')})": d['id'] for d in donatur}
-            selected = st.selectbox("Pilih Donatur yang akan dihapus", list(donatur_options.keys()))
-            donatur_id = donatur_options[selected]
-            d = next(x for x in donatur if x['id'] == donatur_id)
-            
-            st.warning(f"⚠️ Anda akan menghapus donatur: **{d['nama']}**")
-            if st.button("🗑️ Hapus Donatur", use_container_width=True):
-                donatur = [x for x in donatur if x['id'] != donatur_id]
-                save_json(DONATUR_FILE, donatur)
-                st.success(f"✅ Donatur {d['nama']} berhasil dihapus!")
-                st.rerun()
-        else:
-            st.info("Belum ada donatur.")
-    
-    # Daftar Donatur
-    st.markdown("---")
-    st.write("### 📋 Daftar Donatur")
+    st.write("### Daftar Donatur")
     if donatur:
         df = pd.DataFrame(donatur)
         df['Nominal'] = df['nominal'].apply(format_rupiah)
@@ -760,18 +840,20 @@ elif menu == "💰 Manajemen Donatur":
         donatur2 = sum(d['nominal'] for d in donatur if d.get('kategori') == 'Donatur 2')
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("💰 Total Donatur 1", format_rupiah(donatur1))
+            st.metric("Total Donatur 1", format_rupiah(donatur1))
         with col2:
-            st.metric("💰 Total Donatur 2", format_rupiah(donatur2))
+            st.metric("Total Donatur 2", format_rupiah(donatur2))
+    else:
+        st.info("Belum ada donatur.")
 
 # ==================================================
-# 12. HALAMAN GRAFIK
+# 13. HALAMAN GRAFIK
 # ==================================================
 
-elif menu == "📈 Grafik & Analisis":
-    st.title("📈 Grafik & Analisis")
+elif menu == "Grafik & Analisis":
+    st.markdown("<h1 class='main-header'>Grafik & Analisis</h1>", unsafe_allow_html=True)
     
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Pemasukan", "📊 Pengeluaran", "📊 Perbandingan", "🎯 Progress"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Pemasukan", "Pengeluaran", "Perbandingan", "Progress"])
     
     with tab1:
         st.plotly_chart(buat_grafik_pemasukan_per_bulan(transactions), use_container_width=True)
@@ -788,12 +870,12 @@ elif menu == "📈 Grafik & Analisis":
         st.plotly_chart(buat_grafik_progress(target, total_pemasukan), use_container_width=True)
 
 # ==================================================
-# 13. HALAMAN REKOMENDASI
+# 14. HALAMAN REKOMENDASI
 # ==================================================
 
-elif menu == "🔔 Rekomendasi":
-    st.title("🔔 Rekomendasi Penagihan")
-    st.caption(f"📅 Per: {datetime.now().strftime('%d %B %Y')}")
+elif menu == "Rekomendasi":
+    st.markdown("<h1 class='main-header'>Rekomendasi Penagihan</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p class='sub-header'>Per: {datetime.now().strftime('%d %B %Y')}</p>", unsafe_allow_html=True)
     
     rekom = get_rekomendasi(members, transactions)
     
@@ -817,76 +899,134 @@ elif menu == "🔔 Rekomendasi":
             st.dataframe(pd.DataFrame(rendah), use_container_width=True)
 
 # ==================================================
-# 14. HALAMAN LAPORAN
+# 15. HALAMAN LAPORAN & REKAP
 # ==================================================
 
-elif menu == "📄 Laporan":
-    st.title("📄 Laporan Keuangan")
+elif menu == "Laporan & Rekap":
+    st.markdown("<h1 class='main-header'>Laporan & Rekap Keuangan</h1>", unsafe_allow_html=True)
     
     target = get_target_total(config, members, donatur)
     progress = (total_pemasukan / target * 100) if target > 0 else 0
     
-    col1, col2 = st.columns(2)
+    st.write("### Ringkasan Keuangan")
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("💰 Total Pemasukan", format_rupiah(total_pemasukan))
-        st.metric("💸 Total Pengeluaran", format_rupiah(total_pengeluaran))
-        st.metric("💵 Saldo Bersih", format_rupiah(saldo))
+        st.metric("Total Pemasukan", format_rupiah(total_pemasukan))
     with col2:
-        st.metric("🎯 Target", format_rupiah(target))
-        st.metric("📊 Progress", f"{progress:.1f}%")
-        st.metric("👥 Total Member Aktif", len([m for m in members if m.get('status', 'AKTIF') == 'AKTIF']))
+        st.metric("Total Pengeluaran", format_rupiah(total_pengeluaran))
+    with col3:
+        st.metric("Saldo Bersih", format_rupiah(saldo))
+    with col4:
+        st.metric("Progress Target", f"{progress:.1f}%")
     
     st.markdown("---")
-    st.write("### 📆 Rincian Pemasukan per Kategori")
     
-    kategori_total = {"Pemuda": 0, "Orang Tua": 0, "Anak-anak": 0, "Perempuan": 0}
-    for t in transactions:
-        if t.get('jenis') == 'pengeluaran':
-            continue
-        if t.get('kategori') in kategori_total:
-            kategori_total[t['kategori']] += t.get('nominal', 0)
-    
-    donatur1_total = sum(d.get('nominal', 0) for d in donatur if d.get('kategori') == 'Donatur 1')
-    donatur2_total = sum(d.get('nominal', 0) for d in donatur if d.get('kategori') == 'Donatur 2')
-    
+    st.write("### Rekap Per Kategori")
     kategori_data = []
-    for k, v in kategori_total.items():
-        if v > 0:
-            kategori_data.append({"Kategori": k, "Total": format_rupiah(v)})
-    if donatur1_total > 0:
-        kategori_data.append({"Kategori": "Donatur 1", "Total": format_rupiah(donatur1_total)})
-    if donatur2_total > 0:
-        kategori_data.append({"Kategori": "Donatur 2", "Total": format_rupiah(donatur2_total)})
+    for kategori in ["Donatur 1", "Donatur 2", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak"]:
+        count = sum(1 for m in members if m['kategori'] == kategori and m.get('status', 'AKTIF') == 'AKTIF')
+        total_bayar_k = sum(t.get('nominal', 0) for t in transactions if t.get('kategori') == kategori and t.get('jenis') != 'pengeluaran')
+        if kategori == "Donatur 1":
+            target_k = config.get('target_donatur1', 5000000) * count
+        elif kategori == "Donatur 2":
+            target_k = config.get('target_donatur2', 2500000) * count
+        elif kategori == "Pemuda":
+            target_k = config.get('target_pemuda', 1500000) * count
+        elif kategori == "Orang Tua":
+            target_k = config.get('target_orangtua', 1000000) * count
+        else:
+            target_k = 0
+        if count > 0 or total_bayar_k > 0:
+            progress_k = (total_bayar_k / target_k * 100) if target_k > 0 else 0
+            kategori_data.append({
+                "Kategori": kategori,
+                "Jumlah": count,
+                "Total Bayar": format_rupiah(total_bayar_k),
+                "Target": format_rupiah(target_k),
+                "Progress": f"{progress_k:.1f}%"
+            })
     
     if kategori_data:
         st.dataframe(pd.DataFrame(kategori_data), use_container_width=True)
-
-# ==================================================
-# 15. HALAMAN SETTING
-# ==================================================
-
-elif menu == "⚙️ Setting":
-    st.title("⚙️ Pengaturan")
     
-    st.write("### 📅 Konfigurasi")
+    st.markdown("---")
+    
+    st.write("### Rekap Per Minggu")
+    minggu_data = {}
+    for t in transactions:
+        if t.get('jenis') == 'pengeluaran':
+            continue
+        minggu = t.get('minggu_ke', 0)
+        if minggu > 0:
+            minggu_data[minggu] = minggu_data.get(minggu, 0) + t.get('nominal', 0)
+    
+    if minggu_data:
+        data = []
+        for minggu, total in sorted(minggu_data.items()):
+            start_week, end_week = get_week_range(config['tanggal_mulai'], minggu)
+            data.append({
+                "Minggu": f"Minggu {minggu}",
+                "Periode": f"{start_week} - {end_week}",
+                "Total": format_rupiah(total)
+            })
+        st.dataframe(pd.DataFrame(data), use_container_width=True)
+    else:
+        st.info("Belum ada data pembayaran.")
+    
+    st.markdown("---")
+    
+    st.write("### Rekap Per Bulan")
+    bulan_data = {}
+    for t in transactions:
+        if t.get('jenis') == 'pengeluaran':
+            continue
+        tanggal = datetime.strptime(t['tanggal'], "%Y-%m-%d")
+        bulan = tanggal.strftime("%B %Y")
+        bulan_data[bulan] = bulan_data.get(bulan, 0) + t.get('nominal', 0)
+    
+    if bulan_data:
+        data = []
+        for bulan, total in sorted(bulan_data.items()):
+            data.append({
+                "Bulan": bulan,
+                "Total": format_rupiah(total)
+            })
+        st.dataframe(pd.DataFrame(data), use_container_width=True)
+    else:
+        st.info("Belum ada data pembayaran.")
+
+# ==================================================
+# 16. HALAMAN SETTING
+# ==================================================
+
+elif menu == "Setting":
+    st.markdown("<h1 class='main-header'>Pengaturan</h1>", unsafe_allow_html=True)
+    
+    st.write("### Konfigurasi")
     
     col1, col2 = st.columns(2)
     with col1:
-        tanggal_mulai = st.date_input("Tanggal Mulai", value=datetime.strptime(config.get('tanggal_mulai', '2026-09-04'), "%Y-%m-%d"))
+        tanggal_mulai = st.date_input("Tanggal Mulai", value=datetime.strptime(config.get('tanggal_mulai', '2026-09-11'), "%Y-%m-%d"))
     with col2:
-        target_pemuda = st.text_input("Target Iuran Pemuda", value=str(config.get('target_pemuda', 1750000)).replace(".", ""))
-        target_orangtua = st.text_input("Target Iuran Orang Tua", value=str(config.get('target_orangtua', 1000000)).replace(".", ""))
+        target_donatur1 = st.text_input("Target Donatur 1", value=str(config.get('target_donatur1', 5000000)).replace(".", ""))
+        target_donatur2 = st.text_input("Target Donatur 2", value=str(config.get('target_donatur2', 2500000)).replace(".", ""))
+        target_pemuda = st.text_input("Target Pemuda", value=str(config.get('target_pemuda', 1500000)).replace(".", ""))
+        target_orangtua = st.text_input("Target Orang Tua", value=str(config.get('target_orangtua', 1000000)).replace(".", ""))
     
-    if st.button("💾 Simpan Konfigurasi", use_container_width=True):
-        target_pemuda_int = parse_nominal(target_pemuda)
-        target_orangtua_int = parse_nominal(target_orangtua)
+    if st.button("Simpan Konfigurasi", use_container_width=True):
+        target_d1 = parse_nominal(target_donatur1)
+        target_d2 = parse_nominal(target_donatur2)
+        target_p = parse_nominal(target_pemuda)
+        target_ot = parse_nominal(target_orangtua)
         
-        if target_pemuda_int and target_orangtua_int:
+        if target_d1 and target_d2 and target_p and target_ot:
             config['tanggal_mulai'] = tanggal_mulai.strftime("%Y-%m-%d")
-            config['target_pemuda'] = target_pemuda_int
-            config['target_orangtua'] = target_orangtua_int
+            config['target_donatur1'] = target_d1
+            config['target_donatur2'] = target_d2
+            config['target_pemuda'] = target_p
+            config['target_orangtua'] = target_ot
             save_json(CONFIG_FILE, config)
             st.success("✅ Konfigurasi berhasil disimpan!")
             st.rerun()
         else:
-            st.error("❌ Format target salah! Gunakan titik (contoh: 1.750.000)")
+            st.error("❌ Format target salah! Gunakan titik (contoh: 1.500.000)")
