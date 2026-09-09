@@ -565,8 +565,60 @@ elif menu == "Manajemen Member":
         st.dataframe(df[['id', 'nama', 'kategori', 'Status', 'Total Bayar', 'tanggal_masuk']].rename(columns={
             'id': 'ID', 'nama': 'Nama', 'kategori': 'Kategori', 'tanggal_masuk': 'Tanggal Masuk'
         }), use_container_width=True)
-    else:
-        st.info("Belum ada member di kategori ini.")
+
+    # ==========================================
+    # HAPUS MEMBER
+    # ==========================================
+    st.write("### Hapus Member")
+    member_options = {f"{m['nama']} ({m['kategori']})": m['id'] for m in members}
+    selected = st.selectbox("Pilih Member yang akan dihapus", list(member_options.keys()))
+    member_id = member_options[selected]
+    member = next(m for m in members if m['id'] == member_id)
+
+    if st.button("Hapus Member"):
+        st.warning(f"Yakin ingin menghapus {member['nama']}?")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Ya, Hapus"):
+                members = [m for m in members if m['id'] != member_id]
+                transactions = [t for t in transactions if t.get('nama') != member['nama']]
+                save_json(MEMBER_FILE, members)
+                save_json(TRANSACTION_FILE, transactions)
+                st.success(f"Member {member['nama']} berhasil dihapus!")
+                st.rerun()
+        with col2:
+            if st.button("Batal"):
+                st.rerun()
+
+    # ==========================================
+    # EDIT MEMBER
+    # ==========================================
+    st.write("### Edit Member")
+    member_options_edit = {f"{m['nama']} ({m['kategori']})": m['id'] for m in members}
+    selected_edit = st.selectbox("Pilih Member yang akan diedit", list(member_options_edit.keys()))
+    member_id_edit = member_options_edit[selected_edit]
+    member_edit = next(m for m in members if m['id'] == member_id_edit)
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        nama_baru = st.text_input("Nama Baru", value=member_edit['nama'])
+    with col2:
+        kategori_baru = st.selectbox("Kategori Baru", ["Donatur 1", "Donatur 2", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak"], 
+                                   index=["Donatur 1", "Donatur 2", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak"].index(member_edit['kategori']))
+    with col3:
+        status_baru = st.selectbox("Status Baru", ["AKTIF", "NONAKTIF"], 
+                                  index=["AKTIF", "NONAKTIF"].index(member_edit.get('status', 'AKTIF')))
+
+    if st.button("Simpan Perubahan Member"):
+        member_edit['nama'] = nama_baru
+        member_edit['kategori'] = kategori_baru
+        member_edit['status'] = status_baru
+        save_json(MEMBER_FILE, members)
+        st.success("Member berhasil diupdate!")
+        st.rerun()
+
+else:
+    st.info("Belum ada member di kategori ini.")
 
 # ==================================================
 # 8. HALAMAN INPUT PEMBAYARAN
@@ -720,6 +772,22 @@ elif menu == "Edit Pembayaran":
                     else:
                         st.error("❌ Format nominal salah! Gunakan titik (contoh: 500.000)")
 
+
+        # ==========================================
+        # HAPUS PEMBAYARAN
+        # ==========================================
+        st.write("### Hapus Pembayaran")
+        trans_options = [f"No {i+1} - {t.get('tanggal', '-')} - {format_rupiah(t.get('nominal', 0))}" for i, t in enumerate(trans_member)]
+        selected_idx = st.selectbox("Pilih Transaksi yang akan dihapus", range(len(trans_options)), format_func=lambda x: trans_options[x])
+        
+        if st.button("Hapus Transaksi", use_container_width=True):
+            trans_to_delete = trans_member[selected_idx]
+            transactions.remove(trans_to_delete)
+            save_json(TRANSACTION_FILE, transactions)
+            st.success("Transaksi berhasil dihapus!")
+            st.rerun()
+
+
 # ==================================================
 # 10. HALAMAN INPUT PENGELUARAN
 # ==================================================
@@ -797,6 +865,20 @@ elif menu == "Edit Pengeluaran":
                 st.rerun()
             else:
                 st.error("❌ Kategori dan nominal harus diisi dengan benar!")
+
+        # ==========================================
+        # HAPUS PENGELUARAN
+        # ==========================================
+        st.write("### Hapus Pengeluaran")
+        pengeluaran_options = [f"No {i+1} - {p.get('tanggal', '-')} - {p.get('kategori', '-')} - {format_rupiah(p.get('nominal', 0))}" for i, p in enumerate(pengeluaran)]
+        selected_idx = st.selectbox("Pilih Pengeluaran yang akan dihapus", range(len(pengeluaran_options)), format_func=lambda x: pengeluaran_options[x])
+        
+        if st.button("Hapus Pengeluaran", use_container_width=True):
+            p_to_delete = pengeluaran[selected_idx]
+            pengeluaran.remove(p_to_delete)
+            save_json(PENGELUARAN_FILE, pengeluaran)
+            st.success("Pengeluaran berhasil dihapus!")
+            st.rerun()
 
 # ==================================================
 # 12. HALAMAN MANAJEMEN DONATUR
