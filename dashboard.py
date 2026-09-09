@@ -380,48 +380,49 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==================================================
-# SIDEBAR MENU (VERSI DIPERBAIKI)
+# SIDEBAR MENU (TAMPILAN BESAR & BISA DIKLIK)
 # ==================================================
 
+# Logo & Judul
 st.sidebar.markdown("""
     <div style='text-align: center; margin-bottom: 20px;'>
-        <i class="fas fa-coins" style='font-size: 32px; color: #1a365d;'></i>
         <h2 style='color: #1a365d; margin: 0;'>SISTEM IURAN</h2>
         <hr style='border: 1px solid #e2e8f0;'>
     </div>
 """, unsafe_allow_html=True)
 
-# Menu dengan ikon (menggunakan markdown, bukan radio)
-menu_dict = {
-    "Dashboard": "chart-pie",
-    "Manajemen Member": "users",
-    "Input Pembayaran": "hand-holding-usd",
-    "Edit Pembayaran": "pen",
-    "Input Pengeluaran": "money-bill-wave",
-    "Edit Pengeluaran": "edit",
-    "Grafik & Analisis": "chart-line",
-    "Rekomendasi": "bell",
-    "Laporan & Rekap": "file-alt",
-    "Setting": "cog"
-}
+# Daftar menu
+menu_list = [
+    "Dashboard",
+    "Manajemen Member",
+    "Input Pembayaran",
+    "Edit Pembayaran",
+    "Input Pengeluaran",
+    "Edit Pengeluaran",
+    "Grafik & Analisis",
+    "Rekomendasi",
+    "Laporan & Rekap",
+    "Setting"
+]
 
-# Buat menu dengan markdown
-menu_items = []
-for label, icon in menu_dict.items():
-    menu_items.append(f"<div class='sidebar-menu'><i class='fas fa-{icon}' style='width: 28px; text-align: center; margin-right: 12px; color: #1a365d;'></i> {label}</div>")
+# Inisialisasi session state untuk menu
+if 'menu' not in st.session_state:
+    st.session_state.menu = "Dashboard"
 
-menu_html = "<br>".join(menu_items)
-st.sidebar.markdown(menu_html, unsafe_allow_html=True)
-
-# Pilihan menu (tetap pakai radio untuk navigasi, tapi disembunyikan)
-menu = st.sidebar.radio(
-    "Pilih Menu",
-    list(menu_dict.keys()),
-    label_visibility="collapsed"
-)
+# Buat tombol untuk setiap menu (teks besar)
+for item in menu_list:
+    if st.sidebar.button(
+        item,
+        key=item,
+        use_container_width=True,
+        type="primary" if st.session_state.menu == item else "secondary"
+    ):
+        st.session_state.menu = item
+        st.rerun()
 
 st.sidebar.markdown("---")
 
+# Statistik ringkas di bawah (opsional)
 total_pemasukan = get_total_pemasukan(transactions, donatur)
 total_pengeluaran = get_total_pengeluaran(pengeluaran)
 saldo = total_pemasukan - total_pengeluaran
@@ -439,6 +440,8 @@ st.sidebar.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
+# Gunakan session state sebagai menu aktif
+menu = st.session_state.menu
 
 # ==================================================
 # 6. HALAMAN DASHBOARD
