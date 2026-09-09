@@ -446,10 +446,10 @@ menu = st.session_state.menu
 if menu == "Dashboard":
     st.markdown("<h1 class='main-header'>Dashboard Keuangan</h1>", unsafe_allow_html=True)
     st.markdown(f"<p class='sub-header'>Periode: {config['tanggal_mulai']} - Agustus 2027</p>", unsafe_allow_html=True)
-    
+
     target = get_target_total(config, members)
     progress = (total_pemasukan / target * 100) if target > 0 else 0
-    
+
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("Total Pemasukan", format_rupiah(total_pemasukan))
@@ -459,29 +459,29 @@ if menu == "Dashboard":
         st.metric("Saldo Bersih", format_rupiah(saldo))
     with col4:
         st.metric("Progress Target", f"{progress:.1f}%")
-    
-    st.markdown("---")
-    
-    col1, col2 = st.columns(2)
-with col1:
-    st.plotly_chart(
-        buat_grafik_progress(target, total_pemasukan), 
-        use_container_width=True,
-        key="dashboard_progress"  # ← TAMBAHKAN!
-    )
-with col2:
-    st.plotly_chart(
-        buat_grafik_perbandingan(transactions, pengeluaran), 
-        use_container_width=True,
-        key="dashboard_perbandingan"  # ← TAMBAHKAN!
-    )
 
-st.markdown("---")
-st.plotly_chart(
-    buat_grafik_pemasukan_per_bulan(transactions), 
-    use_container_width=True,
-    key="dashboard_pemasukan_bulan"  # ← TAMBAHKAN!
-)
+    st.markdown("---")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(
+            buat_grafik_progress(target, total_pemasukan),
+            use_container_width=True,
+            key="dashboard_progress"
+        )
+    with col2:
+        st.plotly_chart(
+            buat_grafik_perbandingan(transactions, pengeluaran),
+            use_container_width=True,
+            key="dashboard_perbandingan"
+        )
+
+    st.markdown("---")
+    st.plotly_chart(
+        buat_grafik_pemasukan_per_bulan(transactions),
+        use_container_width=True,
+        key="dashboard_pemasukan_bulan"
+    )
 
 # ==================================================
 # 7. HALAMAN MANAJEMEN MEMBER
