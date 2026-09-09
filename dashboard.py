@@ -463,13 +463,25 @@ if menu == "Dashboard":
     st.markdown("---")
     
     col1, col2 = st.columns(2)
-    with col1:
-        st.plotly_chart(buat_grafik_progress(target, total_pemasukan), use_container_width=True)
-    with col2:
-        st.plotly_chart(buat_grafik_perbandingan(transactions, pengeluaran), use_container_width=True)
-    
-    st.markdown("---")
-    st.plotly_chart(buat_grafik_pemasukan_per_bulan(transactions), use_container_width=True)
+with col1:
+    st.plotly_chart(
+        buat_grafik_progress(target, total_pemasukan), 
+        use_container_width=True,
+        key="dashboard_progress"  # ← TAMBAHKAN!
+    )
+with col2:
+    st.plotly_chart(
+        buat_grafik_perbandingan(transactions, pengeluaran), 
+        use_container_width=True,
+        key="dashboard_perbandingan"  # ← TAMBAHKAN!
+    )
+
+st.markdown("---")
+st.plotly_chart(
+    buat_grafik_pemasukan_per_bulan(transactions), 
+    use_container_width=True,
+    key="dashboard_pemasukan_bulan"  # ← TAMBAHKAN!
+)
 
 # ==================================================
 # 7. HALAMAN MANAJEMEN MEMBER
@@ -574,10 +586,43 @@ elif menu == "Input Pembayaran":
     if not active_members:
         st.warning("Belum ada member aktif.")
     else:
-        st.write("### Daftar Tagihan Minggu Ini")
+        # ==========================================
+        # FILTER KATEGORI
+        # ==========================================
+        filter_kategori = st.radio(
+            "Pilih Kategori",
+            ["Donatur", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak", "Semua Member"],
+            horizontal=True
+        )
+        
+        # Filter berdasarkan kategori
+        if filter_kategori == "Donatur":
+            filtered_members = [m for m in active_members if m['kategori'] in ['Donatur 1', 'Donatur 2']]
+        elif filter_kategori == "Pemuda":
+            filtered_members = [m for m in active_members if m['kategori'] == 'Pemuda']
+        elif filter_kategori == "Orang Tua":
+            filtered_members = [m for m in active_members if m['kategori'] == 'Orang Tua']
+        elif filter_kategori == "Perempuan":
+            filtered_members = [m for m in active_members if m['kategori'] == 'Perempuan']
+        elif filter_kategori == "Anak-anak":
+            filtered_members = [m for m in active_members if m['kategori'] == 'Anak-anak']
+        else:  # Semua Member
+            filtered_members = active_members
+        
+        # ==========================================
+        # FITUR CARI MEMBER
+        # ==========================================
+        search = st.text_input("🔍 Cari Member", placeholder="Ketik nama...")
+        if search:
+            filtered_members = [m for m in filtered_members if search.lower() in m['nama'].lower()]
+        
+        # ==========================================
+        # TAMPILKAN DAFTAR TAGIHAN
+        # ==========================================
+        st.write(f"### 📋 Daftar Tagihan {filter_kategori} ({len(filtered_members)} orang)")
         
         data_input = {}
-        for m in active_members:
+        for m in filtered_members:
             data_input[m['id']] = st.number_input(
                 f"{m['nama']} ({m['kategori']})",
                 min_value=0,
@@ -586,7 +631,7 @@ elif menu == "Input Pembayaran":
                 key=f"pay_{m['id']}"
             )
         
-        if st.button("Simpan Semua", use_container_width=True):
+        if st.button("💾 Simpan Semua", use_container_width=True):
             saved = 0
             for member_id, nominal in data_input.items():
                 member = next(m for m in members if m['id'] == member_id)
@@ -603,8 +648,11 @@ elif menu == "Input Pembayaran":
             st.success(f"✅ {saved} pembayaran berhasil disimpan!")
             st.rerun()
         
+        # ==========================================
+        # REKAP MINGGU INI
+        # ==========================================
         st.markdown("---")
-        st.write("### Rekap Minggu Ini")
+        st.write("### 📊 Rekap Minggu Ini")
         trans_minggu = [t for t in transactions if t.get('minggu_ke') == minggu_ke and t.get('jenis') != 'pengeluaran']
         total_minggu = sum(t.get('nominal', 0) for t in trans_minggu)
         total_bayar = len(set(t.get('nama') for t in trans_minggu if t.get('nominal', 0) > 0))
@@ -811,18 +859,39 @@ elif menu == "Grafik & Analisis":
     tab1, tab2, tab3, tab4 = st.tabs(["Pemasukan", "Pengeluaran", "Perbandingan", "Progress"])
     
     with tab1:
-        st.plotly_chart(buat_grafik_pemasukan_per_bulan(transactions), use_container_width=True)
-        st.plotly_chart(buat_grafik_pemasukan_per_minggu(transactions, config), use_container_width=True)
+        # Beri key unik
+        st.plotly_chart(
+            buat_grafik_pemasukan_per_bulan(transactions), 
+            use_container_width=True,
+            key="grafik_bulan"  # ← TAMBAHKAN INI!
+        )
+        st.plotly_chart(
+            buat_grafik_pemasukan_per_minggu(transactions, config), 
+            use_container_width=True,
+            key="grafik_minggu"  # ← TAMBAHKAN INI!
+        )
     
     with tab2:
-        st.plotly_chart(buat_grafik_pengeluaran(pengeluaran), use_container_width=True)
+        st.plotly_chart(
+            buat_grafik_pengeluaran(pengeluaran), 
+            use_container_width=True,
+            key="grafik_pengeluaran"  # ← TAMBAHKAN INI!
+        )
     
     with tab3:
-        st.plotly_chart(buat_grafik_perbandingan(transactions, pengeluaran), use_container_width=True)
+        st.plotly_chart(
+            buat_grafik_perbandingan(transactions, pengeluaran), 
+            use_container_width=True,
+            key="grafik_perbandingan"  # ← TAMBAHKAN INI!
+        )
     
     with tab4:
         target = get_target_total(config, members)
-        st.plotly_chart(buat_grafik_progress(target, total_pemasukan), use_container_width=True)
+        st.plotly_chart(
+            buat_grafik_progress(target, total_pemasukan), 
+            use_container_width=True,
+            key="grafik_progress"  # ← TAMBAHKAN INI!
+        )
 
 # ==================================================
 # 14. HALAMAN REKOMENDASI
