@@ -1018,6 +1018,68 @@ elif menu == "Laporan & Rekap":
         st.dataframe(pd.DataFrame(data), use_container_width=True)
     else:
         st.info("Belum ada data pembayaran.")
+    # ==========================================
+    # REKAP PER MEMBER
+    # ==========================================
+    st.markdown("---")
+    st.write("### Rekap Per Member")
+    
+    # Pilih member dari daftar yang aktif
+    active_members = [m for m in members if m.get('status', 'AKTIF') == 'AKTIF']
+    if active_members:
+        # Buat daftar pilihan
+        member_options = {f"{m['nama']} ({m['kategori']})": m['id'] for m in active_members}
+        selected_label = st.selectbox("Pilih Member", list(member_options.keys()))
+        selected_id = member_options[selected_label]
+        member = next(m for m in active_members if m['id'] == selected_id)
+        
+        # Hitung data member
+        total_bayar = sum(t.get('nominal', 0) for t in transactions if t.get('nama') == member['nama'] and t.get('jenis') != 'pengeluaran')
+        
+        # Tentukan target berdasarkan kategori
+        if member['kategori'] == 'Donatur 1':
+            target = config.get('target_donatur1', 5000000)
+        elif member['kategori'] == 'Donatur 2':
+            target = config.get('target_donatur2', 2500000)
+        elif member['kategori'] == 'Pemuda':
+            target = config.get('target_pemuda', 1500000)
+        elif member['kategori'] == 'Orang Tua':
+            target = config.get('target_orangtua', 1000000)
+        else:
+            target = 0
+        
+        sisa = target - total_bayar if target > 0 else 0
+        progress = (total_bayar / target * 100) if target > 0 else 0
+        
+        # Tampilkan detail
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Target", format_rupiah(target))
+        with col2:
+            st.metric("Total Bayar", format_rupiah(total_bayar))
+        with col3:
+            st.metric("Sisa", format_rupiah(sisa))
+        
+        # Progress bar
+        if target > 0:
+            st.progress(min(progress / 100, 1.0))
+            st.caption(f"Progress: {progress:.1f}%")
+        else:
+            st.info("Kategori ini tidak memiliki target iuran.")
+        
+        # Riwayat pembayaran
+        trans_member = get_transaksi_per_member(transactions, member['nama'])
+        if trans_member:
+            st.write("#### Riwayat Pembayaran")
+            df = pd.DataFrame(trans_member)
+            df['Nominal'] = df['nominal'].apply(format_rupiah)
+            st.dataframe(df[['tanggal', 'minggu_ke', 'Nominal']].rename(columns={
+                'tanggal': 'Tanggal', 'minggu_ke': 'Minggu'
+            }), use_container_width=True)
+        else:
+            st.info("Belum ada riwayat pembayaran untuk member ini.")
+    else:
+        st.info("Belum ada member aktif.")
 
 # ==================================================
 # 16. HALAMAN SETTING
