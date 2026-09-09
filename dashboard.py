@@ -489,13 +489,13 @@ if menu == "Dashboard":
 
 elif menu == "Manajemen Member":
     st.markdown("<h1 class='main-header'>Manajemen Member</h1>", unsafe_allow_html=True)
-    
+
     filter_kategori = st.radio(
         "Pilih Kategori",
         ["Donatur", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak", "Semua Member"],
         horizontal=True
     )
-    
+
     sub_filter = "Semua"
     if filter_kategori == "Donatur":
         sub_filter = st.radio(
@@ -503,7 +503,7 @@ elif menu == "Manajemen Member":
             ["Donatur 1", "Donatur 2", "Lihat Semua Donatur"],
             horizontal=True
         )
-    
+
     filtered_members = []
     if filter_kategori == "Donatur":
         if sub_filter == "Donatur 1":
@@ -522,14 +522,14 @@ elif menu == "Manajemen Member":
         filtered_members = [m for m in members if m['kategori'] == 'Anak-anak']
     else:
         filtered_members = members
-    
+
     with st.expander("Tambah Member"):
         col1, col2 = st.columns(2)
         with col1:
             nama_baru = st.text_input("Nama")
         with col2:
             kategori_baru = st.selectbox("Kategori", ["Donatur 1", "Donatur 2", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak"])
-        
+
         if st.button("Tambah Member", use_container_width=True):
             if nama_baru:
                 new_id = max([m['id'] for m in members]) + 1 if members else 1
@@ -545,80 +545,80 @@ elif menu == "Manajemen Member":
                 st.rerun()
             else:
                 st.error("❌ Nama harus diisi!")
-    
+
     search = st.text_input("Cari Member", placeholder="Ketik nama...")
     if search:
         filtered_members = [m for m in filtered_members if search.lower() in m['nama'].lower()]
-    
+
     st.write(f"### {filter_kategori} ({len(filtered_members)} orang)")
-    
+
     if filtered_members:
         df = pd.DataFrame(filtered_members)
         df['Status'] = df['status'].apply(lambda x: f"🟢 {x}" if x == 'AKTIF' else f"🔴 {x}")
-        
+
         total_bayar = []
         for m in filtered_members:
             total = sum(t.get('nominal', 0) for t in transactions if t.get('nama') == m['nama'] and t.get('jenis') != 'pengeluaran')
             total_bayar.append(format_rupiah(total))
         df['Total Bayar'] = total_bayar
-        
+
         st.dataframe(df[['id', 'nama', 'kategori', 'Status', 'Total Bayar', 'tanggal_masuk']].rename(columns={
             'id': 'ID', 'nama': 'Nama', 'kategori': 'Kategori', 'tanggal_masuk': 'Tanggal Masuk'
         }), use_container_width=True)
 
-    # ==========================================
-    # HAPUS MEMBER
-    # ==========================================
-    st.write("### Hapus Member")
-    member_options = {f"{m['nama']} ({m['kategori']})": m['id'] for m in members}
-    selected = st.selectbox("Pilih Member yang akan dihapus", list(member_options.keys()))
-    member_id = member_options[selected]
-    member = next(m for m in members if m['id'] == member_id)
+        # ==========================================
+        # HAPUS MEMBER
+        # ==========================================
+        st.write("### Hapus Member")
+        member_options = {f"{m['nama']} ({m['kategori']})": m['id'] for m in members}
+        selected = st.selectbox("Pilih Member yang akan dihapus", list(member_options.keys()))
+        member_id = member_options[selected]
+        member = next(m for m in members if m['id'] == member_id)
 
-    if st.button("Hapus Member"):
-        st.warning(f"Yakin ingin menghapus {member['nama']}?")
-        col1, col2 = st.columns(2)
+        if st.button("Hapus Member"):
+            st.warning(f"Yakin ingin menghapus {member['nama']}?")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Ya, Hapus"):
+                    members = [m for m in members if m['id'] != member_id]
+                    transactions = [t for t in transactions if t.get('nama') != member['nama']]
+                    save_json(MEMBER_FILE, members)
+                    save_json(TRANSACTION_FILE, transactions)
+                    st.success(f"Member {member['nama']} berhasil dihapus!")
+                    st.rerun()
+            with col2:
+                if st.button("Batal"):
+                    st.rerun()
+
+        # ==========================================
+        # EDIT MEMBER
+        # ==========================================
+        st.write("### Edit Member")
+        member_options_edit = {f"{m['nama']} ({m['kategori']})": m['id'] for m in members}
+        selected_edit = st.selectbox("Pilih Member yang akan diedit", list(member_options_edit.keys()))
+        member_id_edit = member_options_edit[selected_edit]
+        member_edit = next(m for m in members if m['id'] == member_id_edit)
+
+        col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button("Ya, Hapus"):
-                members = [m for m in members if m['id'] != member_id]
-                transactions = [t for t in transactions if t.get('nama') != member['nama']]
-                save_json(MEMBER_FILE, members)
-                save_json(TRANSACTION_FILE, transactions)
-                st.success(f"Member {member['nama']} berhasil dihapus!")
-                st.rerun()
+            nama_baru = st.text_input("Nama Baru", value=member_edit['nama'])
         with col2:
-            if st.button("Batal"):
-                st.rerun()
+            kategori_baru = st.selectbox("Kategori Baru", ["Donatur 1", "Donatur 2", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak"],
+                                       index=["Donatur 1", "Donatur 2", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak"].index(member_edit['kategori']))
+        with col3:
+            status_baru = st.selectbox("Status Baru", ["AKTIF", "NONAKTIF"],
+                                      index=["AKTIF", "NONAKTIF"].index(member_edit.get('status', 'AKTIF')))
 
-    # ==========================================
-    # EDIT MEMBER
-    # ==========================================
-    st.write("### Edit Member")
-    member_options_edit = {f"{m['nama']} ({m['kategori']})": m['id'] for m in members}
-    selected_edit = st.selectbox("Pilih Member yang akan diedit", list(member_options_edit.keys()))
-    member_id_edit = member_options_edit[selected_edit]
-    member_edit = next(m for m in members if m['id'] == member_id_edit)
+        if st.button("Simpan Perubahan Member"):
+            member_edit['nama'] = nama_baru
+            member_edit['kategori'] = kategori_baru
+            member_edit['status'] = status_baru
+            save_json(MEMBER_FILE, members)
+            st.success("Member berhasil diupdate!")
+            st.rerun()
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        nama_baru = st.text_input("Nama Baru", value=member_edit['nama'])
-    with col2:
-        kategori_baru = st.selectbox("Kategori Baru", ["Donatur 1", "Donatur 2", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak"], 
-                                   index=["Donatur 1", "Donatur 2", "Pemuda", "Orang Tua", "Perempuan", "Anak-anak"].index(member_edit['kategori']))
-    with col3:
-        status_baru = st.selectbox("Status Baru", ["AKTIF", "NONAKTIF"], 
-                                  index=["AKTIF", "NONAKTIF"].index(member_edit.get('status', 'AKTIF')))
-
-    if st.button("Simpan Perubahan Member"):
-        member_edit['nama'] = nama_baru
-        member_edit['kategori'] = kategori_baru
-        member_edit['status'] = status_baru
-        save_json(MEMBER_FILE, members)
-        st.success("Member berhasil diupdate!")
-        st.rerun()
-
-else:
-    st.info("Belum ada member di kategori ini.")
+    else:
+        st.info("Belum ada member di kategori ini.")
 
 # ==================================================
 # 8. HALAMAN INPUT PEMBAYARAN
