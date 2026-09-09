@@ -1,0 +1,4 @@
+[
+  {"nama": "Rzky", "kategori": "Donatur 1", "nominal": 5000000, "status": "SUDAH BAYAR", "tanggal_bayar": "2026-09-11"},
+  {"nama": "Bowok", "kategori": "Donatur 2", "nominal": 2500000, "status": "BELUM BAYAR", "tanggal_bayar": null}
+]
