@@ -18,7 +18,6 @@ CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
 MEMBER_FILE = os.path.join(DATA_DIR, "members.json")
 TRANSACTION_FILE = os.path.join(DATA_DIR, "transactions.json")
 PENGELUARAN_FILE = os.path.join(DATA_DIR, "pengeluaran.json")
-DONATUR_FILE = os.path.join(DATA_DIR, "donatur.json")
 
 def load_json(file_path, default=None):
     if default is None:
@@ -58,20 +57,18 @@ def get_week_range(tanggal_mulai_str, minggu_ke):
     end_date = start_date + timedelta(days=6)
     return start_date.strftime("%d-%m-%Y"), end_date.strftime("%d-%m-%Y")
 
-def get_total_pemasukan(transactions, donatur):
+def get_total_pemasukan(transactions):
     total = sum(t.get('nominal', 0) for t in transactions if t.get('jenis') != 'pengeluaran')
-    total += sum(d.get('nominal', 0) for d in donatur if d.get('status') == 'SUDAH BAYAR')
     return total
 
 def get_total_pengeluaran(pengeluaran):
     return sum(p.get('nominal', 0) for p in pengeluaran)
 
-def get_target_total(config, members, donatur):
+def get_target_total(config, members):
     donatur1 = sum(1 for m in members if m['kategori'] == 'Donatur 1' and m.get('status', 'AKTIF') == 'AKTIF')
     donatur2 = sum(1 for m in members if m['kategori'] == 'Donatur 2' and m.get('status', 'AKTIF') == 'AKTIF')
     pemuda = sum(1 for m in members if m['kategori'] == 'Pemuda' and m.get('status', 'AKTIF') == 'AKTIF')
     orangtua = sum(1 for m in members if m['kategori'] == 'Orang Tua' and m.get('status', 'AKTIF') == 'AKTIF')
-    
     target = (donatur1 * config.get('target_donatur1', 5000000)) + \
              (donatur2 * config.get('target_donatur2', 2500000)) + \
              (pemuda * config.get('target_pemuda', 1500000)) + \
@@ -244,8 +241,8 @@ def buat_grafik_pengeluaran(pengeluaran):
     )
     return fig
 
-def buat_grafik_perbandingan(transactions, pengeluaran, donatur):
-    total_pemasukan = get_total_pemasukan(transactions, donatur)
+def buat_grafik_perbandingan(transactions, pengeluaran):
+    total_pemasukan = get_total_pemasukan(transactions)
     total_pengeluaran = get_total_pengeluaran(pengeluaran)
     saldo = total_pemasukan - total_pengeluaran
     
@@ -350,7 +347,6 @@ if not members:
 
 transactions = load_json(TRANSACTION_FILE, [])
 pengeluaran = load_json(PENGELUARAN_FILE, [])
-donatur = load_json(DONATUR_FILE, [])
 
 # ==================================================
 # 4. STREAMLIT UI
@@ -423,7 +419,7 @@ for item in menu_list:
 st.sidebar.markdown("---")
 
 # Statistik ringkas di bawah (opsional)
-total_pemasukan = get_total_pemasukan(transactions, donatur)
+total_pemasukan = get_total_pemasukan(transactions)
 total_pengeluaran = get_total_pengeluaran(pengeluaran)
 saldo = total_pemasukan - total_pengeluaran
 
@@ -451,7 +447,7 @@ if menu == "Dashboard":
     st.markdown("<h1 class='main-header'>Dashboard Keuangan</h1>", unsafe_allow_html=True)
     st.markdown(f"<p class='sub-header'>Periode: {config['tanggal_mulai']} - Agustus 2027</p>", unsafe_allow_html=True)
     
-    target = get_target_total(config, members, donatur)
+    target = get_target_total(config, members)
     progress = (total_pemasukan / target * 100) if target > 0 else 0
     
     col1, col2, col3, col4 = st.columns(4)
@@ -470,7 +466,7 @@ if menu == "Dashboard":
     with col1:
         st.plotly_chart(buat_grafik_progress(target, total_pemasukan), use_container_width=True)
     with col2:
-        st.plotly_chart(buat_grafik_perbandingan(transactions, pengeluaran, donatur), use_container_width=True)
+        st.plotly_chart(buat_grafik_perbandingan(transactions, pengeluaran), use_container_width=True)
     
     st.markdown("---")
     st.plotly_chart(buat_grafik_pemasukan_per_bulan(transactions), use_container_width=True)
@@ -822,10 +818,10 @@ elif menu == "Grafik & Analisis":
         st.plotly_chart(buat_grafik_pengeluaran(pengeluaran), use_container_width=True)
     
     with tab3:
-        st.plotly_chart(buat_grafik_perbandingan(transactions, pengeluaran, donatur), use_container_width=True)
+        st.plotly_chart(buat_grafik_perbandingan(transactions, pengeluaran), use_container_width=True)
     
     with tab4:
-        target = get_target_total(config, members, donatur)
+        target = get_target_total(config, members)
         st.plotly_chart(buat_grafik_progress(target, total_pemasukan), use_container_width=True)
 
 # ==================================================
@@ -864,7 +860,7 @@ elif menu == "Rekomendasi":
 elif menu == "Laporan & Rekap":
     st.markdown("<h1 class='main-header'>Laporan & Rekap Keuangan</h1>", unsafe_allow_html=True)
     
-    target = get_target_total(config, members, donatur)
+    target = get_target_total(config, members)
     progress = (total_pemasukan / target * 100) if target > 0 else 0
     
     st.write("### Ringkasan Keuangan")
