@@ -117,7 +117,6 @@ def get_icon(menu_name):
         "Edit Pembayaran": "pen",
         "Input Pengeluaran": "money-bill-wave",
         "Edit Pengeluaran": "edit",
-        "Manajemen Donatur": "hand-holding-heart",
         "Grafik & Analisis": "chart-line",
         "Rekomendasi": "bell",
         "Laporan & Rekap": "file-alt",
@@ -363,83 +362,25 @@ st.set_page_config(page_title="Sistem Iuran", page_icon="💰", layout="wide", i
 st.markdown("""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* Font lebih besar */
-        .stMetricValue {
-            font-size: 28px !important;
-            color: #1a365d !important;
-        }
-        .stMetricLabel {
-            font-size: 16px !important;
-            color: #4a5568 !important;
-        }
-        /* Card dengan bayangan */
-        .css-1r6slb0 {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            padding: 20px;
-        }
-        /* Sidebar icon */
-        .sidebar-icon {
-            width: 28px;
-            text-align: center;
-            margin-right: 12px;
-            color: #1a365d;
-        }
+        /* ... CSS lainnya ... */
+        
+        /* Tambahkan CSS untuk sidebar menu */
         .sidebar-menu {
             font-size: 18px;
-            padding: 8px 0;
+            padding: 10px 0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.2s;
         }
-        /* Header */
-        .main-header {
-            color: #1a365d;
-            font-weight: 700;
-            font-size: 28px;
-        }
-        .sub-header {
-            color: #4a5568;
-            font-size: 16px;
-        }
-        /* Tombol */
-        .stButton button {
-            background-color: #1a365d !important;
-            color: white !important;
-            font-size: 18px !important;
-            padding: 12px 24px !important;
-            border-radius: 8px !important;
-            border: none !important;
-        }
-        .stButton button:hover {
-            background-color: #2d4a7a !important;
-        }
-        /* Tabel */
-        .dataframe {
-            font-size: 16px !important;
-        }
-        .dataframe th {
-            background-color: #1a365d !important;
-            color: white !important;
-            padding: 12px !important;
-        }
-        .dataframe td {
-            padding: 10px !important;
-        }
-        /* Radio button */
-        .stRadio > label {
-            font-size: 16px !important;
-        }
-        .stRadio > div {
-            gap: 16px !important;
-        }
-        /* Selectbox */
-        .stSelectbox > label {
-            font-size: 16px !important;
+        .sidebar-menu:hover {
+            background-color: #edf2f7;
+            padding-left: 12px;
         }
     </style>
 """, unsafe_allow_html=True)
 
 # ==================================================
-# 5. SIDEBAR MENU
+# SIDEBAR MENU (VERSI DIPERBAIKI)
 # ==================================================
 
 st.sidebar.markdown("""
@@ -450,40 +391,34 @@ st.sidebar.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+# Menu dengan ikon (menggunakan markdown, bukan radio)
+menu_dict = {
+    "Dashboard": "chart-pie",
+    "Manajemen Member": "users",
+    "Input Pembayaran": "hand-holding-usd",
+    "Edit Pembayaran": "pen",
+    "Input Pengeluaran": "money-bill-wave",
+    "Edit Pengeluaran": "edit",
+    "Grafik & Analisis": "chart-line",
+    "Rekomendasi": "bell",
+    "Laporan & Rekap": "file-alt",
+    "Setting": "cog"
+}
+
+# Buat menu dengan markdown
+menu_items = []
+for label, icon in menu_dict.items():
+    menu_items.append(f"<div class='sidebar-menu'><i class='fas fa-{icon}' style='width: 28px; text-align: center; margin-right: 12px; color: #1a365d;'></i> {label}</div>")
+
+menu_html = "<br>".join(menu_items)
+st.sidebar.markdown(menu_html, unsafe_allow_html=True)
+
+# Pilihan menu (tetap pakai radio untuk navigasi, tapi disembunyikan)
 menu = st.sidebar.radio(
-    "",
-    [
-        "Dashboard",
-        "Manajemen Member",
-        "Input Pembayaran",
-        "Edit Pembayaran",
-        "Input Pengeluaran",
-        "Edit Pengeluaran",
-        "Manajemen Donatur",
-        "Grafik & Analisis",
-        "Rekomendasi",
-        "Laporan & Rekap",
-        "Setting"
-    ],
-    format_func=lambda x: f"<i class='fas fa-{get_icon(x)} sidebar-icon'></i> {x}",
+    "Pilih Menu",
+    list(menu_dict.keys()),
     label_visibility="collapsed"
 )
-
-def get_icon(menu_name):
-    icons = {
-        "Dashboard": "chart-pie",
-        "Manajemen Member": "users",
-        "Input Pembayaran": "hand-holding-usd",
-        "Edit Pembayaran": "pen",
-        "Input Pengeluaran": "money-bill-wave",
-        "Edit Pengeluaran": "edit",
-        "Manajemen Donatur": "hand-holding-heart",
-        "Grafik & Analisis": "chart-line",
-        "Rekomendasi": "bell",
-        "Laporan & Rekap": "file-alt",
-        "Setting": "cog"
-    }
-    return icons.get(menu_name, "circle")
 
 st.sidebar.markdown("---")
 
@@ -503,6 +438,7 @@ st.sidebar.markdown(f"""
         <div style='color: #1a365d; font-size: 20px; font-weight: 700;'>{len(members)}</div>
     </div>
 """, unsafe_allow_html=True)
+
 
 # ==================================================
 # 6. HALAMAN DASHBOARD
