@@ -106,6 +106,26 @@ def get_transaksi_per_member(transactions, nama):
     return [t for t in transactions if t.get('nama') == nama and t.get('jenis') != 'pengeluaran']
 
 # ==================================================
+# 2. FUNGSI IKON UNTUK SIDEBAR
+# ==================================================
+
+def get_icon(menu_name):
+    icons = {
+        "Dashboard": "chart-pie",
+        "Manajemen Member": "users",
+        "Input Pembayaran": "hand-holding-usd",
+        "Edit Pembayaran": "pen",
+        "Input Pengeluaran": "money-bill-wave",
+        "Edit Pengeluaran": "edit",
+        "Manajemen Donatur": "hand-holding-heart",
+        "Grafik & Analisis": "chart-line",
+        "Rekomendasi": "bell",
+        "Laporan & Rekap": "file-alt",
+        "Setting": "cog"
+    }
+    return icons.get(menu_name, "circle")
+
+# ==================================================
 # 2. FUNGSI GRAFIK
 # ==================================================
 
